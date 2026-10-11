@@ -12,7 +12,7 @@
 
 MetaForge Bridge authorizes your **Embark** account (ARC Raiders) with MetaForge. The only catch on
 Linux: the site **only offers a Windows installer**
-(`downloads.metaforge.app/bridge/MetaForgeBridgeSetup.exe`), and the flow starts with a
+(`https://metaforge.app/api/arc-raiders/embark/app-auth/bridge-download`), and the flow starts with a
 `metaforge://…` **deep link** that your browser opens.
 
 The good news: the bridge is built with **Rust + Dioxus** and uses **WebKitGTK** on Linux. And since
@@ -52,10 +52,12 @@ Browser (Firefox)  ──metaforge://…──►  host handler (relay)
 
 ### 1. Install the bridge into the prefix (silent)
 
+**NOTE:** The download link could change, if unsure please download it manually from your browser.
+
 ```bash
 # download the official installer
 curl -L -o ~/Downloads/MetaForgeBridgeSetup.exe \
-  https://downloads.metaforge.app/bridge/MetaForgeBridgeSetup.exe
+  https://downloads.metaforge.app/bridge/MetaForgeBridgeSetup-0.1.8.exe
 
 # install it INSIDE ARC Raiders' Proton prefix (Steam running)
 protontricks-launch --appid 1808500 ~/Downloads/MetaForgeBridgeSetup.exe /S

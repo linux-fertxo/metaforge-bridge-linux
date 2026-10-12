@@ -52,7 +52,7 @@ Browser (Firefox)  ──metaforge://…──►  host handler (relay)
 
 ### 1. Install the bridge into the prefix (silent)
 
-**NOTE:** The download link could change, if unsure please download it manually from your browser.
+***NOTE:** The download link could change, if unsure please download it manually from your browser.*
 
 ```bash
 # download the official installer
@@ -84,12 +84,13 @@ exec protontricks-launch --appid 1808500 "$EXE" "$@"
 chmod +x ~/.local/bin/metaforge-bridge-relay.sh
 ```
 
+***NOTE:** replace YOUR_USER with your actual username!*
 `~/.local/share/applications/metaforge-bridge.desktop`:
 ```ini
 [Desktop Entry]
 Type=Application
 Name=MetaForge Bridge
-Exec=/home/YOURUSER/.local/bin/metaforge-bridge-relay.sh %u
+Exec=/home/YOUR_USER/.local/bin/metaforge-bridge-relay.sh %u
 Terminal=false
 NoDisplay=true
 MimeType=x-scheme-handler/metaforge;

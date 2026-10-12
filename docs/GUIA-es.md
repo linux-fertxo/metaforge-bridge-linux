@@ -1,4 +1,4 @@
-# MetaForge Bridge en Linux — guía completa
+# MetaForge Bridge en Linux
 
 > Cómo enlazar tu cuenta de **ARC Raiders** con [metaforge.app](https://metaforge.app) desde Linux,
 > cuando MetaForge **solo distribuye un instalador de Windows**.
@@ -6,11 +6,11 @@
 
 ---
 
-## 1. El problema
+## El problema
 
 MetaForge Bridge es el puente que autoriza tu cuenta **Embark** (ARC Raiders) con la web de MetaForge.
 El único inconveniente en Linux es que **en la web solo hay un instalador de Windows**
-(`downloads.metaforge.app/bridge/MetaForgeBridgeSetup.exe`), y el flujo empieza con un **deep-link**
+(`https://metaforge.app/api/arc-raiders/embark/app-auth/bridge-download`), y el flujo empieza con un **deep-link**
 `metaforge://…` que abre el navegador.
 
 La buena noticia: **el puente está hecho con Rust + Dioxus** y su parte web tira de **WebKitGTK** en Linux.
@@ -18,7 +18,7 @@ Y como juegas por **Steam**, **no necesitas WebView2** (eso solo lo usa la vía 
 
 ---
 
-## 2. La solución
+## La solución
 
 Ejecutar el **instalador oficial de Windows** dentro del **prefix Proton** de ARC Raiders y lanzarlo
 con `protontricks-launch`. Proton trae los *shims* que dan acceso al **Steam nativo**, así que el
@@ -37,7 +37,7 @@ Navegador (Firefox)  ──metaforge://…──►  handler del host (relé)
 
 ---
 
-## 3. Requisitos
+## Requisitos
 
 - **Steam** instalado y **abierto con la sesión iniciada** (de ahí sale el ticket).
 - **protontricks** (`protontricks` + `protontricks-launch`).
@@ -46,14 +46,16 @@ Navegador (Firefox)  ──metaforge://…──►  handler del host (relé)
 
 ---
 
-## 4. Pasos
+## Pasos
 
-### 4.1. Instalar el bridge dentro del prefix (silencioso)
+### 1. Instalar el bridge dentro del prefix (silencioso)
+
+**NOTA:** El enlace de descarga puede cambiar, si no estás seguro por favor descárgalo manualmente desde tu navegador.
 
 ```bash
 # baja el instalador oficial
 curl -L -o ~/Descargas/MetaForgeBridgeSetup.exe \
-  https://downloads.metaforge.app/bridge/MetaForgeBridgeSetup.exe
+  https://downloads.metaforge.app/bridge/MetaForgeBridgeSetup-0.1.8.exe
 
 # instálalo DENTRO del prefix Proton de ARC Raiders (Steam abierto)
 protontricks-launch --appid 1808500 ~/Descargas/MetaForgeBridgeSetup.exe /S
@@ -64,7 +66,7 @@ Queda en:
 ~/.steam/steam/steamapps/compatdata/1808500/pfx/drive_c/users/steamuser/AppData/Local/MetaForge Bridge/metaforge-bridge.exe
 ```
 
-### 4.2. Relé + handler del esquema `metaforge://`
+### 2. Relé + handler del esquema `metaforge://`
 
 El navegador no puede lanzar un programa "dentro de un prefix", así que hacemos un **relé**: un script
 que recibe la URL del deep-link y lanza el `.exe` en el prefix.
@@ -80,12 +82,13 @@ exec protontricks-launch --appid 1808500 "$EXE" "$@"
 chmod +x ~/.local/bin/metaforge-bridge-relay.sh
 ```
 
+***NOTA: reemplaza TU_USUARIO por tu nombre de usuario!*
 `~/.local/share/applications/metaforge-bridge.desktop`:
 ```ini
 [Desktop Entry]
 Type=Application
 Name=MetaForge Bridge
-Exec=/home/TUUSUARIO/.local/bin/metaforge-bridge-relay.sh %u
+Exec=/home/TU_USUARIO/.local/bin/metaforge-bridge-relay.sh %u
 Terminal=false
 NoDisplay=true
 MimeType=x-scheme-handler/metaforge;
@@ -100,7 +103,7 @@ xdg-mime default metaforge-bridge.desktop x-scheme-handler/metaforge
 xdg-mime query default x-scheme-handler/metaforge     # -> metaforge-bridge.desktop
 ```
 
-### 4.3. Enlazar
+### 3. Enlazar
 
 1. **Steam abierto.**
 2. En el navegador: **metaforge.app → Connect Embark**.
@@ -111,35 +114,15 @@ xdg-mime query default x-scheme-handler/metaforge     # -> metaforge-bridge.desk
 
 ## 5. Actualizar cuando salga versión nueva
 
-Las versiones se suceden a menudo. Script de un paso:
+Las versiones se suceden a menudo. Este script lo hace en un paso:
+[`scripts/metaforge-bridge-update.sh`](scripts/metaforge-bridge-update.sh):
 
-`~/.local/bin/metaforge-bridge-update`:
 ```bash
-#!/usr/bin/env bash
-set -euo pipefail
-APPID=1808500
-URL="https://downloads.metaforge.app/bridge/MetaForgeBridgeSetup.exe"
-DL="$HOME/Descargas/MetaForgeBridgeSetup.exe"
-EXE="$HOME/.steam/steam/steamapps/compatdata/$APPID/pfx/drive_c/users/steamuser/AppData/Local/MetaForge Bridge/metaforge-bridge.exe"
-ver(){ strings -e l -n 3 "$1" 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1; }
-curl -fsS -A 'Mozilla/5.0' -o "$DL.tmp" "$URL"
-CUR=$( [ -f "$EXE" ] && ver "$EXE" || true ); NEW=$(ver "$DL.tmp")
-echo "instalada: ${CUR:-ninguna}  ·  disponible: $NEW"
-[ "$CUR" = "$NEW" ] && { mv -f "$DL.tmp" "$DL"; echo "ya estás al día"; exit 0; }
-pgrep -x steam >/dev/null || { echo "Abre Steam primero"; exit 3; }
-pkill -f 'metaforge-bridge\.exe' 2>/dev/null || true; sleep 2   # el instalador no reemplaza un .exe en uso
-mv -f "$DL.tmp" "$DL"
-DISPLAY=${DISPLAY:-:0} protontricks-launch --appid "$APPID" "$DL" /S
-echo "actualizado a $(ver "$EXE")"
-```
-```bash
-chmod +x ~/.local/bin/metaforge-bridge-update
-metaforge-bridge-update            # actualiza
+scripts/metaforge-bridge-update.sh          # actualiza
+scripts/metaforge-bridge-update.sh --check  # sólo comprueba
 ```
 
----
-
-## 6. Pitfalls (los que nos mordieron)
+## Dificultades (las que nos mordieron)
 
 - **Steam tiene que estar abierto.** Si no: *"Steam is not available"*.
 - **WebView2 solo hace falta para Epic.** Por Steam, no. (Por eso funciona en Proton.)
@@ -153,7 +136,7 @@ metaforge-bridge-update            # actualiza
 
 ---
 
-## 7. Verificación y diagnóstico
+## Verificación y diagnóstico
 
 ```bash
 # ¿handler bien puesto?
@@ -178,7 +161,7 @@ operación en MetaForge).
 
 ---
 
-## 8. Nota para MetaForge (feedback)
+## Nota para MetaForge (feedback)
 
 Nos encantaría un **build nativo de Linux**. El bridge está hecho con **Rust + Dioxus**, que
 **compila nativo en Linux** (usa `wry` → WebKitGTK): básicamente sería `cargo build --release`

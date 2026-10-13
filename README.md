@@ -85,6 +85,7 @@ chmod +x ~/.local/bin/metaforge-bridge-relay.sh
 ```
 
 ***NOTE:** replace YOUR_USER with your actual username!*
+
 `~/.local/share/applications/metaforge-bridge.desktop`:
 ```ini
 [Desktop Entry]
